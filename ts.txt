@@ -1,0 +1,20 @@
+_contador, --, --, 0
+_promedio, --, --, 0
+_actual, --, --, 0
+_suma, --, --, 0
+_nombre, --, --, 0
+_80, Integer, 80, -1
+_Prueba.txt_LyC_Tema_4!, String, "Prueba.txt LyC Tema 4!", 24
+_Ingrese_un_valor_:_, String, "Ingrese un valor : ", 21
+_0, Integer, 0, -1
+_02.5, Float, 02.5, -1
+_92, Integer, 92, -1
+_1, Integer, 1, -1
+_0.342, Float, 0.342, -1
+_256, Integer, 256, -1
+_52, Integer, 52, -1
+_4, Integer, 4, -1
+_La_suma_es:_, String, "La suma es: ", 14
+_2, Integer, 2, -1
+_actual_es_ma, String, "actual es ma", 14
+_no_es_mayor_que_2, String, "no es mayor que 2", 19
