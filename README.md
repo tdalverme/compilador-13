@@ -7,7 +7,7 @@
 
 ## Forma de uso
 1.  Abrir una terminal en el directorio con los archivos anteriormente descriptos.
-2. Ejecutar el comando ```flex Lexico.l```. Debería generarse el archivo "lex.yy.c".
+2. Ejecutar el comando ```flex Lexico.l```. Debería generarse el archivo ```lex.yy.c```.
 3. Ejecutar el comando ```bison -d Sintactico.y```. Deberían generarse los archivos ```Sintactico.tab.c``` y ```Sintactico.tab.h```.
 4. Ejectuar el comando ```gcc lex.yy.c Sintactico.tab.c -o Primera.exe```. Debería generarse el archivo ```Primera.exe```.
 5. Ejecutar el comando ```Primera.exe "codigo.analizar"```. Debería generarse el archivo de la tabla de símbolos ```ts.txt```.
