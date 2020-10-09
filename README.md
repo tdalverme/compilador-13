@@ -3,7 +3,7 @@
 - **Sintactico.y:** implementación del analizador sintáctico.
 - **lista.h:** implementación de una lista enlazada, utilizada para manejar la tabla de símbolos.
 - **strings.h:** funciones para el manejo de cadenas de caracteres.
-- **codigo.analizar:** código de prueba para el compilador.
+- **prueba.txt:** código de prueba para el compilador.
 
 ## Forma de uso
 1.  Abrir una terminal en el directorio con los archivos anteriormente descriptos.
