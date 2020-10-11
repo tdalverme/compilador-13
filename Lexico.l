@@ -47,7 +47,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 }
 
 {CTE_STRING} {
-    if(strlen(yytext) > MAX_CARACTERES_STRING + 1) {
+    if(strlen(yytext) > MAX_CARACTERES_STRING + 2) {
         fprintf(stderr, "ERROR: %s supera los %d caracteres.\n", yytext, MAX_CARACTERES_STRING);
         return ERROR_LEXICO;
     }
@@ -67,7 +67,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
     }
 
-    return T_STRING;
+    return T_CTE_STRING;
 }
 
 ":=" {
@@ -104,6 +104,10 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     //printf("Palabra reservada: %s\n\n", yytext);
 
     return T_FLOAT;
+}
+
+"String" {
+    return T_STRING;
 }
 
 "CONST" {
@@ -333,6 +337,10 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     //printf("Corchete cerrado: %s\n\n", yytext);
 
     return T_COR_C;
+}
+
+"!" {
+    return T_NOT;
 }
 
 [ \t\n] {}

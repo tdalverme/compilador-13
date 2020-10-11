@@ -12,6 +12,7 @@
 
     // TOKENS
     %token T_STRING
+    %token T_CTE_STRING
     %token T_DIM
     %token T_AS
     %token T_CONST
@@ -29,6 +30,7 @@
     %right T_ASIG
     %token T_DISTINTO
     %token T_IGUAL
+    %token T_NOT
     %token T_COMA
     %token T_MENORIGUAL
     %token T_MENOR
@@ -69,7 +71,7 @@
     dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC{
         printf("\tDeclaracion de constante\n");
     }
-    valor_cte : T_CTE_FLOAT | T_CTE_INT | T_STRING
+    valor_cte : T_CTE_FLOAT | T_CTE_INT | T_CTE_STRING
 
 
     // ASIGNACION
@@ -77,14 +79,14 @@
         printf("\tAsignacion\n");
     }
     left_side : T_ID
-    right_side : expresion
+    right_side : expresion | T_CTE_STRING
 
 
     // PUT
     put : T_PUT valor_string T_PYC {
         printf("\tPut\n");
     }
-    valor_string : T_ID | T_STRING
+    valor_string : T_ID | T_CTE_STRING
 
 
     // GET
@@ -112,35 +114,31 @@
     sentencia_else : T_ELSE bloque {
         printf("\tSentencia else\n")
     }
+    sentencia_else : T_ELSE sentencia {
+        printf("\tSentencia else unica sentencia\n")
+    }
 
-    condicion_comp : condicion T_AND condicion | condicion T_OR condicion | condicion
+    condicion_comp : condicion T_AND condicion | condicion T_OR condicion | T_NOT condicion | condicion
     condicion : expresion operador_condicional expresion
     operador_condicional : T_MAYOR | T_MENOR | T_MAYORIGUAL | T_MENORIGUAL | T_IGUAL | T_DISTINTO
 
 
     // EXPRESIONES
     expresion : expresion T_SUMA termino { 
-        $$ = $1 + $3;
         printf("\tSuma\n");
     }
     expresion : expresion T_RESTA termino { 
-        $$ = $1 - $3;
         printf("\tResta\n");
     }
     expresion : termino
     termino : termino T_MULT factor { 
-        $$ = $1 * $3;
         printf("\tMultiplicacion\n");
     }
     termino : termino T_DIV factor { 
-        //$$ = $1 / $3;
         printf("\tDivision\n");
     }
     termino : factor
-    factor : T_PA_A expresion T_PA_C { 
-        $$ = $2;
-    }
-    factor : T_ID | T_CTE_INT | T_CTE_FLOAT | contar
+    factor : T_PA_A expresion T_PA_C | T_ID | T_CTE_INT | T_CTE_FLOAT | contar
 
 
     // CONTAR
@@ -149,13 +147,15 @@
     }
 
 
-    // LISTA
+    // LISTA DE EXPRESIONES
     lista_exp : lista_exp T_COMA expresion | expresion
 
+    // LISTA DE IDS
     lista_ids : lista_ids T_COMA T_ID | T_ID
 
+    // LISTA DE TIPOS DE DATOS
     lista_tipos : lista_tipos T_COMA tipo | tipo
-    tipo : T_INTEGER | T_FLOAT
+    tipo : T_INTEGER | T_FLOAT | T_STRING
 %%
 
 int main (int argc, char *argv[]) {
