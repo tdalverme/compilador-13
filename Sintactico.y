@@ -84,14 +84,14 @@
 
     // PUT
     put : T_PUT valor_string T_PYC {
-        printf("\tPut\n");
+        printf("\tSentencia PUT\n");
     }
     valor_string : T_ID | T_CTE_STRING
 
 
     // GET
     get : T_GET T_ID T_PYC {
-        printf("\tGet\n");
+        printf("\tSentencia GET\n");
     }
 
 
@@ -130,20 +130,20 @@
     expresion : expresion T_RESTA termino { 
         printf("\tResta\n");
     }
-    expresion : termino
+    expresion : termino { printf("\tTermino es expresion\n"); }
     termino : termino T_MULT factor { 
         printf("\tMultiplicacion\n");
     }
     termino : termino T_DIV factor { 
         printf("\tDivision\n");
     }
-    termino : factor
-    factor : T_PA_A expresion T_PA_C | T_ID | T_CTE_INT | T_CTE_FLOAT | contar
+    termino : factor { printf("\tFactor es termino\n"); }
+    factor : T_PA_A expresion T_PA_C { printf("\tExpresion entre parentesis\n"); } | T_ID | T_CTE_INT | T_CTE_FLOAT | contar
 
 
     // CONTAR
     contar : T_CONTAR T_PA_A expresion T_PYC T_COR_A lista_exp T_COR_C T_PA_C {
-        printf("\tContar\n");
+        printf("\tFuncion contar\n");
     }
 
 
