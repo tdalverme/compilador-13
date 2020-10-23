@@ -171,5 +171,4 @@ int main (int argc, char *argv[]) {
 }
 
 void yyerror (char const *s) {
-    fprintf (stderr, "%s\n", s);
 }

@@ -7,7 +7,7 @@ typedef struct DataTS {
 
 typedef struct Nodo {
     DataTS data;
-    struct Nodo * sig;
+    struct Nodo *sig;
 } Nodo;
 
 typedef struct Lista {
@@ -48,7 +48,6 @@ int push(Lista *lista, DataTS *data) {
         actual->sig = nuevo;
         lista->tail = nuevo;
     }
-
     return 1;
 }
 

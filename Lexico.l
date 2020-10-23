@@ -2,12 +2,19 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
+    #include <float.h>
+    #include <errno.h>
     #include "lista.h"
     #include "Sintactico.tab.h"
     #include "strings.h"
 
+    extern int errno;
+
     #define MAX_CARACTERES_STRING 30
     #define ERROR_LEXICO -1
+    #define FUERA_DE_RANGO -2
+    #define MIN_INT -256
+    #define MAX_INT 255
     
     #define TS_NOMBRE 0
     #define TS_TIPO 1
@@ -24,6 +31,10 @@
     Lista tabla_simbolos;
 
     void escribirTablaSimbolos();
+    int validarRangoInt(char *);
+    int validarRangoFloat(char *);
+
+    int esConst = 0;
 %}
 
 %option noyywrap
@@ -35,7 +46,7 @@ SIMBOLO     [;:,./[\]()&!¡#$%=?¿+\-_*<>]
 ESPACIOS    [ \t\n\r]
 
 CTE_STRING  \"({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*\"
-CTE_INT     {DIGITO}+
+CTE_INT     -?{DIGITO}+
 CTE_FLOAT   ({DIGITO}+\.{DIGITO}*)|({DIGITO}*\.{DIGITO}+)
 ID          {LETRA}(({LETRA}|{DIGITO}|_)*({LETRA}|{DIGITO}))*
 COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
@@ -43,7 +54,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 %%
 
 {COMENTARIO} {
-    //printf("Comentario: %s\n\n", yytext);
+    printf("Comentario: %s\n\n", yytext);
 }
 
 {CTE_STRING} {
@@ -112,7 +123,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 "CONST" {
     //printf("Palabra reservada: %s\n\n", yytext);
-
+    esConst = T_CONST;
     return T_CONST;
 }
 
@@ -166,18 +177,27 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 {ID} {
     //printf("ID: %s\n\n", yytext);
-
+    
     if(tabla_simbolos.head == NULL) {
         init(&tabla_simbolos);
     }
 
     DataTS newData;
+    char *nombreFormateado = getNombreFormateado(yytext);
 
-    newData.nombre = strdup(getNombreFormateado(yytext));
+    if(esConst == T_CONST) {
+        newData.nombre = (char *)malloc(strlen(nombreFormateado) + 7);
+        strcpy(newData.nombre, "_CONST");
+        esConst = 0;
+    } else {
+        newData.nombre = (char *)malloc(strlen(nombreFormateado) + 1);
+        newData.nombre[0] = '\0';
+    }
+
+    strcat(newData.nombre, nombreFormateado);
     newData.tipo = TS_ID;
     newData.valor = NULL;
     newData.longitud = -1;
-
     if(push(&tabla_simbolos, &newData) == 1) {
         escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
     }
@@ -188,47 +208,55 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 {CTE_INT} {
     //printf("Constante entera: %s\n\n", yytext);
 
-    if(tabla_simbolos.head == NULL) {
-        init(&tabla_simbolos);
+    if(validarRangoInt(yytext) == FUERA_DE_RANGO) {
+        printf("\nError lexico, entero fuera de rango [-256 ; 255]: %s", yytext);
+        return ERROR_LEXICO;
     }
+    else {
+        if(tabla_simbolos.head == NULL) {
+            init(&tabla_simbolos);
+        }
 
-    DataTS newData;
+        DataTS newData;
 
-    newData.nombre = strdup(getNombreFormateado(yytext));
-    newData.tipo = TS_INT;
-    newData.valor = strdup(yytext);
-    newData.longitud = -1;
+        newData.nombre = strdup(getNombreFormateado(yytext));
+        newData.tipo = TS_INT;
+        newData.valor = strdup(yytext);
+        newData.longitud = -1;
 
-    if(push(&tabla_simbolos, &newData) == 1) {
-        escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
+        if(push(&tabla_simbolos, &newData) == 1) {
+            escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
+        }
+
+        return T_CTE_INT;
     }
-
-    yylval = atoi(yytext);
-
-    return T_CTE_INT;
 }
 
 {CTE_FLOAT} {
     //printf("Constante flotante: %s\n\n", yytext);
 
-    if(tabla_simbolos.head == NULL) {
-        init(&tabla_simbolos);
+    if(validarRangoFloat(yytext) == FUERA_DE_RANGO) {
+        printf("\nError lexico, numero flotante fuera de rango [-%g ; %g]: %s", FLT_MAX, FLT_MAX, yytext);
+        return ERROR_LEXICO;
     }
+    else {
+        if(tabla_simbolos.head == NULL) {
+            init(&tabla_simbolos);
+        }
 
-    DataTS newData;
-    
-    newData.nombre = strdup(getNombreFormateado(yytext));
-    newData.tipo = TS_FLOAT;
-    newData.valor = strdup(yytext);
-    newData.longitud = -1;
+        DataTS newData;
+        
+        newData.nombre = strdup(getNombreFormateado(yytext));
+        newData.tipo = TS_FLOAT;
+        newData.valor = strdup(yytext);
+        newData.longitud = -1;
 
-    if(push(&tabla_simbolos, &newData) == 1) {
-        escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
+        if(push(&tabla_simbolos, &newData) == 1) {
+            escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
+        }
+
+        return T_CTE_FLOAT;
     }
-
-    yylval = atof(yytext);
-
-    return T_CTE_FLOAT;
 }
 
 "<>" {
@@ -346,7 +374,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 [ \t\n] {}
 
 . {
-    //printf("Error lexico, caracter invalido: %s\n\n", yytext);
+    printf("\nError lexico, caracter invalido: %s\n\n", yytext);
     return ERROR_LEXICO;
 }
 %%
@@ -380,19 +408,53 @@ void escribirTablaSimbolos(DataTS data) {
         if((fileTS = fopen("ts.txt", "wt")) == NULL) {
             fprintf(stderr, "\nNo se pudo crear el archivo de la tabla de simbolos.");
             return;
+        } else {
+            fprintf(fileTS, "NOMBRE                          TIPO       VALOR                                  LONGITUD\n");
         }
     }
 
     int tipo = data.tipo;
-
+    
     if(tipo == TS_INT) {
-        fprintf(fileTS, "%s, Integer, %s, %d\n", data.nombre, data.valor, data.longitud);
+        fprintf(fileTS, "%-38s  Integer    %-38s --\n", data.nombre, data.valor);
     } else if(tipo == TS_FLOAT) {
-        fprintf(fileTS, "%s, Float, %s, %d\n", data.nombre, data.valor, data.longitud);
+        fprintf(fileTS, "%-38s  Float      %-38s --\n", data.nombre, data.valor);
     } else if(tipo == TS_STRING) {
-        fprintf(fileTS, "%s, String, %s, %d\n", data.nombre, data.valor, data.longitud);
+        fprintf(fileTS, "%-38s  String     %-38s %d\n", data.nombre, data.valor, data.longitud);
     } else {
-        fprintf(fileTS, "%s, --, --, %d\n", data.nombre, data.valor, data.longitud);
+        fprintf(fileTS, "%-38s  --         --                                     %d\n", data.nombre, data.valor, data.longitud);
     }
 }
 
+int validarRangoInt(char *num) {
+    errno = 0;
+    long int resultado = strtol(num, NULL, 10);
+    
+    if (errno) { 
+        return FUERA_DE_RANGO;
+    }
+    else {
+        if(resultado >= -256 && resultado <= 255) {
+            return 1;
+        }
+    }
+
+    return FUERA_DE_RANGO;
+}
+
+
+int validarRangoFloat(char *num) {
+    errno = 0;
+    double resultado = strtod(num, NULL);
+    
+    if (errno) { 
+        return FUERA_DE_RANGO;
+    }
+    else {
+        if(resultado >= -FLT_MAX && resultado <= FLT_MAX) {
+            return 1;
+        }
+    }
+
+    return FUERA_DE_RANGO;
+}
