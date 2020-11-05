@@ -9,5 +9,7 @@
 - **prueba.txt:** código de prueba para el compilador.
 
 ## Forma de uso
-1. Ejecutar ```compilar-compilador.bat```. Debería generarse el compilador ```Segunda.exe```.
-2. Ejecutar el comando ```Segunda.exe "prueba.txt"```. Debería generarse el archivo de la tabla de símbolos ```ts.txt``` y el archivo ```arbol.png``` con la representación gráfica del árbol sintáctico.
+Ejecutar ```compilar-compilador.bat```. Deberían generarse los siguientes archivos:
+  - **Segunda.exe:** compilador.
+  - **ts.txt:** archivo que contiene la tabla de símbolos.
+  - **arbol.png:** representación gráfica del árbol sintáctico.
