@@ -1,18 +1,30 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
     #include <string.h>
+    #include <process.h>
     #include "Sintactico.tab.h"
+    #include "arbol.h"
     
     FILE *yyin;
+    FILE *dotFile;
 
     int yylex();
+    int _contar_cont;
     void yyerror(char const *);
+
+    struct sNodo *_pivot, *A;
 %}
 
+
+    %union {
+        int integer;
+        char* string;
+        struct sNodo* nodo;
+        float flotante;
+    }
+
     // TOKENS
-    %token T_STRING
-    %token T_CTE_STRING
+    %token <string> T_STRING
+    %token <string> T_CTE_STRING
     %token T_DIM
     %token T_AS
     %token T_CONST
@@ -22,22 +34,22 @@
     %token T_ELSE
     %token T_PUT
     %token T_GET
-    %token T_ID
+    %token <string> T_ID
     %token T_INTEGER
-    %token T_CTE_INT
+    %token <integer> T_CTE_INT
     %token T_FLOAT
-    %token T_CTE_FLOAT
+    %token <flotante> T_CTE_FLOAT
     %right T_ASIG
-    %token T_DISTINTO
-    %token T_IGUAL
-    %token T_NOT
-    %token T_COMA
-    %token T_MENORIGUAL
-    %token T_MENOR
-    %token T_MAYORIGUAL
-    %token T_MAYOR
-    %token T_AND
-    %token T_OR
+    %token <string> T_DISTINTO
+    %token <string> T_IGUAL
+    %token <string> T_NOT
+    %token <string> T_COMA
+    %token <string> T_MENORIGUAL
+    %token <string> T_MENOR
+    %token <string> T_MAYORIGUAL
+    %token <string> T_MAYOR
+    %token <string> T_AND
+    %token <string> T_OR
     %left T_SUMA
     %left T_RESTA
     %left T_MULT
@@ -50,15 +62,40 @@
     %token T_COR_A
     %token T_COR_C
 
+    %type <nodo> factor
+    %type <nodo> termino
+    %type <nodo> expresion
+    %type <nodo> right_side
+    %type <nodo> asignacion
+    %type <nodo> sentencia
+    %type <nodo> conj_sentencias
+    %type <nodo> bloque
+    %type <nodo> programa
+    %type <nodo> put
+    %type <nodo> get
+    %type <nodo> valor_string
+    %type <nodo> sentencia_if_else
+    %type <nodo> sentencia_if
+    %type <nodo> while_loop
+    %type <nodo> condicion
+    %type <nodo> condicion_comp
+    %type <nodo> dec_const
+    %type <nodo> valor_cte
+    %type <nodo> contar
+    %type <nodo> lista_exp
+    %type <string> operador_condicional
+
     %start programa
 %%
     // REGLAS
-    programa : conj_sentencias
+    programa : conj_sentencias { A = $$; }
     bloque : T_LL_A conj_sentencias T_LL_C {
         printf("Bloque\n");
+        //BLOQUE = CONJ_SENT;
+        $$ = $2;
     }
-    conj_sentencias : conj_sentencias sentencia | conj_sentencias bloque | sentencia | bloque
-    sentencia : asignacion | put | get | while_loop | sentencia_if | sentencia_else | dec_variables | dec_const
+    conj_sentencias : conj_sentencias sentencia { $$ = crear_nodo("CONJ", $1, $2) } | conj_sentencias bloque { $$ = crear_nodo("BLOQUE", $1, $2) } | sentencia | bloque
+    sentencia : asignacion | put | get | while_loop | sentencia_if_else | sentencia_if | dec_variables | dec_const
     
 
     // DECLARACION DE VARIABLES
@@ -70,88 +107,155 @@
     // DECLARACION CONSTANTES
     dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC{
         printf("\tDeclaracion de constante\n");
+        $$ = crear_nodo("ASIG_CTE", crear_hoja($2), $4);
     }
-    valor_cte : T_CTE_FLOAT | T_CTE_INT | T_CTE_STRING
+    valor_cte : T_CTE_FLOAT { 
+        char label[128];
+        snprintf(label, sizeof(label), "%g", $1);
+        $$ = crear_hoja(label);
+    }
+    | T_CTE_INT {
+        char label[5];
+        itoa($1, label, 10);
+        $$ = crear_hoja(label);
+    }
+    | T_CTE_STRING {
+        $$ = crear_hoja($1);
+    }
 
 
     // ASIGNACION
-    asignacion : left_side T_ASIG right_side T_PYC {
+    asignacion : T_ID T_ASIG right_side T_PYC {
         printf("\tAsignacion\n");
+        $$ = crear_nodo(":=", crear_hoja($<string>1), $3)
     }
-    left_side : T_ID
-    right_side : expresion | T_CTE_STRING
+    right_side : expresion { $$ = $1; } | T_CTE_STRING { $$ = crear_hoja($1); }
 
 
     // PUT
     put : T_PUT valor_string T_PYC {
         printf("\tSentencia PUT\n");
+        $$ = crear_nodo("PRINT", $2, NULL);
     }
-    valor_string : T_ID | T_CTE_STRING
+    valor_string : T_ID { $$ = crear_hoja($1); } | T_CTE_STRING { $$ = crear_hoja($1); }
 
 
     // GET
     get : T_GET T_ID T_PYC {
         printf("\tSentencia GET\n");
+        $$ = crear_nodo("READ", crear_hoja($2), NULL);
     }
 
 
     // WHILE
     while_loop : T_WHILE T_PA_A condicion_comp T_PA_C bloque {
         printf("\tWhile loop\n");
+        $$ = crear_nodo("WHILE", $3, $5);
     }
     
 
     // IF
     sentencia_if : T_IF T_PA_A condicion_comp T_PA_C bloque {
-        printf("\tSentencia if\n")
+        printf("\tSentencia if\n");
+        $$ = crear_nodo("IF", $3, $5);
     }
     sentencia_if : T_IF T_PA_A condicion_comp T_PA_C sentencia {
-        printf("\tSentencia if unica sentencia\n")
+        printf("\tSentencia if unica sentencia\n");
+        $$ = crear_nodo("IF", $3, $5);
     }
 
+    // IF - ELSE
+    sentencia_if_else : T_IF T_PA_A condicion_comp T_PA_C bloque T_ELSE bloque {
+        printf("\tSentencia if-else\n");
+        $$ = crear_nodo("IF", $3, crear_nodo("CUERPO", $5, $7));
+    }    
 
-    // ELSE
-    sentencia_else : T_ELSE bloque {
-        printf("\tSentencia else\n")
+    condicion_comp : condicion T_AND condicion { 
+        $$ = crear_nodo("AND", $1, $3);
     }
-    sentencia_else : T_ELSE sentencia {
-        printf("\tSentencia else unica sentencia\n")
+    | condicion T_OR condicion {
+        $$ = crear_nodo("OR", $1, $3);
     }
-
-    condicion_comp : condicion T_AND condicion | condicion T_OR condicion | T_NOT condicion | condicion
-    condicion : expresion operador_condicional expresion
+    | T_NOT condicion {
+        $$ = crear_nodo("NOT", $2, NULL);
+    }
+    | condicion
+    
+    condicion : expresion operador_condicional expresion {
+        $$ = crear_nodo($2, $1, $3);
+    }
     operador_condicional : T_MAYOR | T_MENOR | T_MAYORIGUAL | T_MENORIGUAL | T_IGUAL | T_DISTINTO
 
 
-    // EXPRESIONES
+    // EXPRESION
     expresion : expresion T_SUMA termino { 
         printf("\tSuma\n");
+        $$ = crear_nodo("+", $1, $3);
     }
     expresion : expresion T_RESTA termino { 
         printf("\tResta\n");
+        $$ = crear_nodo("-", $1, $3);
     }
-    expresion : termino { printf("\tTermino es expresion\n"); }
+    expresion : termino { 
+        printf("\tTermino es expresion\n");
+        $$ = $1;
+    }
+
+
+    // TERMINO
     termino : termino T_MULT factor { 
         printf("\tMultiplicacion\n");
+        $$ = crear_nodo("*", $1, $3);
     }
     termino : termino T_DIV factor { 
         printf("\tDivision\n");
+        $$ = crear_nodo("/", $1, $3);
     }
-    termino : factor { printf("\tFactor es termino\n"); }
-    factor : T_PA_A expresion T_PA_C { printf("\tExpresion entre parentesis\n"); } | T_ID | T_CTE_INT | T_CTE_FLOAT | contar
+    termino : factor { 
+        printf("\tFactor es termino\n");
+        $$ = $1;
+    }
+    
+
+    // FACTOR
+    factor : T_PA_A expresion T_PA_C { 
+        printf("\tExpresion entre parentesis\n");
+        $$ = $2;
+    }
+    | T_ID {
+        $$ = crear_hoja($1);
+    }
+    | T_CTE_INT {
+        char label[5];
+        itoa($1, label, 10);
+        $$ = crear_hoja(label);
+    }
+    | T_CTE_FLOAT {
+        char label[128];
+        snprintf(label, sizeof(label), "%g", $1);
+        $$ = crear_hoja(label);
+    }
+    | contar
 
 
     // CONTAR
-    contar : T_CONTAR T_PA_A expresion T_PYC T_COR_A lista_exp T_COR_C T_PA_C {
+    contar : T_CONTAR T_PA_A expresion { _pivot = $3; } T_PYC T_COR_A lista_exp T_COR_C T_PA_C {
         printf("\tFuncion contar\n");
+        $$ = $7;
     }
 
 
     // LISTA DE EXPRESIONES
-    lista_exp : lista_exp T_COMA expresion | expresion
+    lista_exp : lista_exp T_COMA expresion {
+        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $3), crear_nodo(":=", crear_hoja("_contar_cont"), crear_nodo("+", crear_hoja("_contar_cont"), crear_hoja("1")))), $1);
+    }
+    | expresion { 
+        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $1), crear_nodo(":=", crear_hoja("_contar_cont"), crear_nodo("+", crear_hoja("_contar_cont"), crear_hoja("1")))), NULL);
+    }
 
     // LISTA DE IDS
-    lista_ids : lista_ids T_COMA T_ID | T_ID
+    lista_ids : lista_ids T_COMA T_ID
+    | T_ID
 
     // LISTA DE TIPOS DE DATOS
     lista_tipos : lista_tipos T_COMA tipo | tipo
@@ -164,6 +268,15 @@ int main (int argc, char *argv[]) {
         fprintf(stderr, "\nNo se pudo abrir el archivo \'%s\'", argv[1]);
     } else {
         yyparse();
+    }
+
+    if((dotFile = fopen("./arbol.dot", "wt")) == NULL) {
+        fprintf(stderr, "\nNo se pudo abrir el archivo \'arbol.txt\'");
+    } else {
+        escribirDotFile(dotFile, A, 0);
+        fclose(dotFile);
+        system("dot -Tpng \"arbol.dot\" -o arbol.png");
+        system("del \"arbol.dot\"");
     }
 
     fclose(yyin);

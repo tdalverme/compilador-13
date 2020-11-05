@@ -78,18 +78,22 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
     }
 
+    yylval.string = strdup(removeAll(yytext, '\"'));
     return T_CTE_STRING;
 }
 
 ":=" {
+    yylval.string = ":=";
     return T_ASIG;
 }
 
 ":" {
+    yylval.string = ":";
     return T_ASIG;
 }
 
 "=" {
+    yylval.string = "=";
     return T_ASIG;
 }
 
@@ -129,7 +133,6 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 "contar" {
     //printf("Palabra reservada: %s\n\n", yytext);
-
     return T_CONTAR;
 }
 
@@ -165,13 +168,13 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 "AND" {
     //printf("Operador AND: %s\n\n", yytext);
-    
+    yylval.string = "AND";
     return T_AND;
 }
 
 "OR" {
     //printf("Operador AND: %s\n\n", yytext);
-    
+    yylval.string = "OR";
     return T_OR;
 }
 
@@ -202,6 +205,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
     }
 
+    yylval.string = strdup(yytext);
     return T_ID;
 }
 
@@ -228,6 +232,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
             escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
         }
 
+        yylval.integer = atoi(yytext);
         return T_CTE_INT;
     }
 }
@@ -255,55 +260,56 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
             escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
         }
 
+        yylval.flotante = atof(yytext);
         return T_CTE_FLOAT;
     }
 }
 
 "<>" {
     //printf("Operador desigualdad: %s\n\n", yytext);
-
+    yylval.string = "<>";
     return T_DISTINTO;
 }
 
 "==" {
     //printf("Operador igualdad: %s\n\n", yytext);
-    
+    yylval.string = "==";
     return T_IGUAL;
 }
 
 "," {
     //printf("Coma: %s\n\n", yytext);
-
+    yylval.string = ",";
     return T_COMA;
 }
 
 "<=" {
     //printf("Operador menor o igual: %s\n\n", yytext);
-
+    yylval.string = "<=";
     return T_MENORIGUAL;
 }
 
 "<" {
     //printf("Operador menor: %s\n\n", yytext);
-
+    yylval.string = "<";
     return T_MENOR;
 }
 
 ">=" {
     //printf("Operador mayor o igual: %s\n\n", yytext);
-
+    yylval.string = ">=";
     return T_MAYORIGUAL;
 }
 
 ">" {
     //printf("Operador mayor: %s\n\n", yytext);
-    
+    yylval.string = ">";
     return T_MAYOR;
 }
 
 "+" {
     //printf("Operador de suma: %s\n\n", yytext);
-
+    
     return T_SUMA;
 }
 
@@ -409,7 +415,7 @@ void escribirTablaSimbolos(DataTS data) {
             fprintf(stderr, "\nNo se pudo crear el archivo de la tabla de simbolos.");
             return;
         } else {
-            fprintf(fileTS, "NOMBRE                          TIPO       VALOR                                  LONGITUD\n");
+            fprintf(fileTS, "NOMBRE                                  TIPO       VALOR                                  LONGITUD\n");
         }
     }
 
@@ -422,7 +428,7 @@ void escribirTablaSimbolos(DataTS data) {
     } else if(tipo == TS_STRING) {
         fprintf(fileTS, "%-38s  String     %-38s %d\n", data.nombre, data.valor, data.longitud);
     } else {
-        fprintf(fileTS, "%-38s  --         --                                     %d\n", data.nombre, data.valor, data.longitud);
+        fprintf(fileTS, "%-38s  --         --                                     --\n", data.nombre, data.valor, data.longitud);
     }
 }
 

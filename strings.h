@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #define SIN_VALOR "VALOR_NULO"
 
 void replaceAll(char *, char, char);
