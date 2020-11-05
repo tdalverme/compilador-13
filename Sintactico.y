@@ -271,7 +271,7 @@ int main (int argc, char *argv[]) {
     }
 
     if((dotFile = fopen("./arbol.dot", "wt")) == NULL) {
-        fprintf(stderr, "\nNo se pudo abrir el archivo \'arbol.txt\'");
+        fprintf(stderr, "\nNo se pudo abrir el archivo \'arbol.dot\'");
     } else {
         escribirDotFile(dotFile, A, 0);
         fclose(dotFile);

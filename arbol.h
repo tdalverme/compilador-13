@@ -41,21 +41,6 @@ Node *crear_nodo(char *label, Node *izq, Node *der) {
     return nodo;
 }
 
-/*
-void inorderToFile(FILE *f, Node * n, int i) {
-	if(n->izq) {
-        inorderToFile(f, n->izq, i + 1);
-        fprintf(f, "\t%d -- %d\n", i, i + 1);
-    }
-
-    fprintf(f, "\t%d [label=\"%s\"]\n", i, n->label);
-	
-    if(n->der) {
-        inorderToFile(f, n->der, i + 2);
-        fprintf(f, "\t%d -- %d\n", i, i + 2);
-    }
-} */
-
 int inorderToFile(FILE *f, Node * n, int i) {
     int actual = i;
     fprintf(f, "\t%d [label=\"%s\"]\n", i, n->label);
@@ -63,11 +48,19 @@ int inorderToFile(FILE *f, Node * n, int i) {
     if(n->izq) {
         fprintf(f, "\t%d -- %d\n", actual, i + 1);
         i = inorderToFile(f, n->izq, i + 1);
+    } else {
+        fprintf(f, "\t%d [style=invis, label=\"\"]\n", i + 1, n->label);
+        fprintf(f, "\t{ edge[style=invis];\n\t%d -- %d\n\t}\n", actual, i + 1);
+        i++;
     }
 	
     if(n->der) {
         fprintf(f, "\t%d -- %d\n", actual, i + 1);
         i = inorderToFile(f, n->der, i + 1);
+    } else {
+        fprintf(f, "\t%d [style=invis, label=\"\"]\n", i + 1, n->label);
+        fprintf(f, "\t{ edge[style=invis];\n\t%d -- %d\n\t}\n", actual, i + 1);
+        i++;
     }
 
     return i;
