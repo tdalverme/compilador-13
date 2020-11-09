@@ -12,4 +12,4 @@
 Ejecutar ```compilar-compilador.bat```. Deberían generarse los siguientes archivos:
   - **Segunda.exe:** compilador.
   - **ts.txt:** archivo que contiene la tabla de símbolos.
-  - **arbol.png:** representación gráfica del árbol sintáctico.
+  - **intermedia.png:** representación gráfica del árbol sintáctico.
