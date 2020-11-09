@@ -27,6 +27,7 @@
 
 %option noyywrap
 %option caseless
+%option yylineno
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
@@ -365,8 +366,8 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 [ \t\n] {}
 
 . {
-    printf("\nError lexico, caracter invalido: %s\n\n", yytext);
-    return ERROR_LEXICO;
+    printf("\nERROR LEXICO, CARACTER INVALIDO: %s\n\n", yytext);
+    return T_ERROR_LEXICO;
 }
 %%
 

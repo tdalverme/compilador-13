@@ -24,6 +24,7 @@ if (actual > 2 and actual <> 0) {
 
 Else
 {
-    if (actual < nombre)
+    if (actual < nombre) {
         PUT "no es mayor que 2";
+    }
 }

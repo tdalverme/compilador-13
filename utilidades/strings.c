@@ -39,7 +39,7 @@ void replaceAll(char *str, char oldChar, char newChar)
 char *removeAll(char *str, char toRemove)
 {
     char * aux = (char *)malloc(strlen(str) + 1);
-    strcpy(aux, str);
+    aux = strdup(str);
 
     int i = 0;
     int j = 0;

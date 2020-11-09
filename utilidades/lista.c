@@ -20,7 +20,6 @@ int push(Lista *lista, DataTS *data) {
         char *nombreCte = (char *)malloc(7 + sizeof(strlen(data->nombre)));
         strcpy(nombreCte, "_CONST");
         strcat(nombreCte, data->nombre);
-        printf("%s\n", nombreCte);
 
         while (actual->sig != NULL) {
             if(strcmp(actual->data.nombre, data->nombre) == 0 || strcmp(actual->data.nombre, nombreCte) == 0) {

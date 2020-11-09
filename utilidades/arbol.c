@@ -38,7 +38,7 @@ int inorderToFile(FILE *f, Node * n, int i) {
         i = inorderToFile(f, n->izq, i + 1);
     } else {
         fprintf(f, "\t%d [style=invis, label=\"\"]\n", i + 1, n->label);
-        fprintf(f, "\t{ edge[style=invis];\n\t%d -- %d\n\t}\n", actual, i + 1);
+        fprintf(f, "\t{\n\t\tedge[style=invis];\n\t\t%d -- %d\n\t}\n", actual, i + 1);
         i++;
     }
 	
@@ -47,7 +47,7 @@ int inorderToFile(FILE *f, Node * n, int i) {
         i = inorderToFile(f, n->der, i + 1);
     } else {
         fprintf(f, "\t%d [style=invis, label=\"\"]\n", i + 1, n->label);
-        fprintf(f, "\t{ edge[style=invis];\n\t%d -- %d\n\t}\n", actual, i + 1);
+        fprintf(f, "\t{\n\t\tedge[style=invis];\n\t\t%d -- %d\n\t}\n", actual, i + 1);
         i++;
     }
 

@@ -10,6 +10,7 @@
 
     int yylex();
     int _contar_cont;
+    extern int yylineno;
     void yyerror(char const *);
 
     struct sNodo *_pivot, *A;
@@ -64,6 +65,7 @@
     %token T_PA_C
     %token T_COR_A
     %token T_COR_C
+    %token T_ERROR_LEXICO
 
     %type <nodo> factor
     %type <nodo> termino
@@ -83,9 +85,12 @@
     %type <nodo> condicion
     %type <nodo> condicion_comp
     %type <nodo> dec_const
+    %type <nodo> dec_variables
     %type <nodo> valor_cte
     %type <nodo> contar
     %type <nodo> lista_exp
+    %type <nodo> lista_tipos
+    %type <nodo> tipo
     %type <string> operador_condicional
 
     %start programa
@@ -98,12 +103,13 @@
         $$ = $2;
     }
     conj_sentencias : conj_sentencias sentencia { $$ = crear_nodo("CONJ", $1, $2) } | conj_sentencias bloque { $$ = crear_nodo("BLOQUE", $1, $2) } | sentencia | bloque
-    sentencia : asignacion | put | get | while_loop | sentencia_if_else | sentencia_if | dec_variables | dec_const
+    sentencia : asignacion | put | get | while_loop | sentencia_if_else | sentencia_if | dec_variables | dec_const | error { yyerror("Error sintactico"); YYABORT; }
     
 
     // DECLARACION DE VARIABLES
     dec_variables : T_DIM T_MENOR lista_ids T_MAYOR T_AS T_MENOR lista_tipos T_MAYOR T_PYC {
         printf("\tDeclaracion de variables\n");
+        $$ = $7;
     }
 
 
@@ -252,10 +258,10 @@
 
     // LISTA DE EXPRESIONES
     lista_exp : lista_exp T_COMA expresion {
-        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $3), crear_nodo(":=", crear_hoja("_contar_cont"), crear_nodo("+", crear_hoja("_contar_cont"), crear_hoja("1")))), $1);
+        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $3), crear_nodo(":=", crear_hoja("$contar_cont"), crear_nodo("+", crear_hoja("$contar_cont"), crear_hoja("1")))), $1);
     }
     | expresion { 
-        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $1), crear_nodo(":=", crear_hoja("_contar_cont"), crear_nodo("+", crear_hoja("_contar_cont"), crear_hoja("1")))), NULL);
+        $$ = crear_nodo("CONTAR", crear_nodo("IF", crear_nodo("==", _pivot, $1), crear_nodo(":=", crear_hoja("$contar_cont"), crear_nodo("+", crear_hoja("$contar_cont"), crear_hoja("1")))), NULL);
     }
 
     // LISTA DE IDS
@@ -283,17 +289,23 @@
     }
 
     // LISTA DE TIPOS DE DATOS
-    lista_tipos : lista_tipos T_COMA tipo | tipo
+    lista_tipos : lista_tipos T_COMA tipo {
+        $$ = crear_nodo("DEC", $3, $1);
+    } 
+    | tipo
     tipo : T_INTEGER {
         DataTS actual = pop(&lista_id);
+        $$ = crear_nodo("->", crear_hoja(actual.nombre), crear_hoja("Integer"));
         modificarTipo(&tabla_simbolos, actual.nombre, TS_INT);
     }
     | T_FLOAT {
         DataTS actual = pop(&lista_id);
+        $$ = crear_nodo("->", crear_hoja(actual.nombre), crear_hoja("Float"));
         modificarTipo(&tabla_simbolos, actual.nombre, TS_FLOAT);
     }
     | T_STRING {
         DataTS actual = pop(&lista_id);
+        $$ = crear_nodo("->", crear_hoja(actual.nombre), crear_hoja("String"));
         modificarTipo(&tabla_simbolos, actual.nombre, TS_STRING);
     }
 %%
@@ -304,7 +316,9 @@ int main (int argc, char *argv[]) {
         fprintf(stderr, "\nNo se pudo abrir el archivo \'%s\'", argv[1]);
         return -1;
     } else {
-        yyparse();
+        if(yyparse() == 1) {
+            return -1;
+        }
     }
 
     if((tsFile = fopen("ts.txt", "wt")) == NULL) {
@@ -328,5 +342,8 @@ int main (int argc, char *argv[]) {
     return 1;     
 }
 
-void yyerror (char const *s) {
+void yyerror(char const *s) {
+    if(strcmp("syntax error", s) != 0) {
+        fprintf(stderr, "\nERROR SINTACTICO, LINEA: %d\n", yylineno);
+    }
 }
