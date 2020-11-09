@@ -1,12 +1,11 @@
 %{
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
     #include <float.h>
     #include <errno.h>
-    #include "lista.h"
+    #include <string.h>
+    #include <stdio.h>
+    #include "utilidades/lista.h"
+    #include "utilidades/strings.h"
     #include "Sintactico.tab.h"
-    #include "strings.h"
 
     extern int errno;
 
@@ -15,22 +14,11 @@
     #define FUERA_DE_RANGO -2
     #define MIN_INT -256
     #define MAX_INT 255
-    
-    #define TS_NOMBRE 0
-    #define TS_TIPO 1
-    #define TS_VALOR 2
-    #define TS_LONGITUD 3
-    
-    #define TS_INT 4
-    #define TS_FLOAT 5
-    #define TS_STRING 6
-    #define TS_ID 7
 
     FILE *yyin;
     FILE *fileTS;
     Lista tabla_simbolos;
 
-    void escribirTablaSimbolos();
     int validarRangoInt(char *);
     int validarRangoFloat(char *);
 
@@ -74,9 +62,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     newData.valor = strdup(yytext);
     newData.longitud = strlen(yytext);
 
-    if(push(&tabla_simbolos, &newData) == 1) {
-        escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
-    }
+    push(&tabla_simbolos, &newData);
 
     yylval.string = strdup(removeAll(yytext, '\"'));
     return T_CTE_STRING;
@@ -191,7 +177,6 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     if(esConst == T_CONST) {
         newData.nombre = (char *)malloc(strlen(nombreFormateado) + 7);
         strcpy(newData.nombre, "_CONST");
-        esConst = 0;
     } else {
         newData.nombre = (char *)malloc(strlen(nombreFormateado) + 1);
         newData.nombre[0] = '\0';
@@ -201,11 +186,10 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     newData.tipo = TS_ID;
     newData.valor = NULL;
     newData.longitud = -1;
-    if(push(&tabla_simbolos, &newData) == 1) {
-        escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
-    }
-
-    yylval.string = strdup(yytext);
+    
+    push(&tabla_simbolos, &newData);
+    yylval.string = strdup(newData.nombre);
+    
     return T_ID;
 }
 
@@ -221,17 +205,20 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
             init(&tabla_simbolos);
         }
 
-        DataTS newData;
+        if(esConst == T_CONST) {
+            esConst = 0;
+        } else {
+            DataTS newData;
 
-        newData.nombre = strdup(getNombreFormateado(yytext));
-        newData.tipo = TS_INT;
-        newData.valor = strdup(yytext);
-        newData.longitud = -1;
+            newData.nombre = strdup(getNombreFormateado(yytext));
+            newData.tipo = TS_INT;
+            newData.valor = strdup(yytext);
+            newData.longitud = -1;
 
-        if(push(&tabla_simbolos, &newData) == 1) {
-            escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
+            push(&tabla_simbolos, &newData);
+            esConst = 0;
         }
-
+        
         yylval.integer = atoi(yytext);
         return T_CTE_INT;
     }
@@ -256,9 +243,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         newData.valor = strdup(yytext);
         newData.longitud = -1;
 
-        if(push(&tabla_simbolos, &newData) == 1) {
-            escribirTablaSimbolos(*verUltimo(&tabla_simbolos));
-        }
+        push(&tabla_simbolos, &newData);
 
         yylval.flotante = atof(yytext);
         return T_CTE_FLOAT;
@@ -408,29 +393,6 @@ int main(int argc, char *argv[]) {
     return 1;
 }
 */
-
-void escribirTablaSimbolos(DataTS data) {
-    if(fileTS == NULL) {
-        if((fileTS = fopen("ts.txt", "wt")) == NULL) {
-            fprintf(stderr, "\nNo se pudo crear el archivo de la tabla de simbolos.");
-            return;
-        } else {
-            fprintf(fileTS, "NOMBRE                                  TIPO       VALOR                                  LONGITUD\n");
-        }
-    }
-
-    int tipo = data.tipo;
-    
-    if(tipo == TS_INT) {
-        fprintf(fileTS, "%-38s  Integer    %-38s --\n", data.nombre, data.valor);
-    } else if(tipo == TS_FLOAT) {
-        fprintf(fileTS, "%-38s  Float      %-38s --\n", data.nombre, data.valor);
-    } else if(tipo == TS_STRING) {
-        fprintf(fileTS, "%-38s  String     %-38s %d\n", data.nombre, data.valor, data.longitud);
-    } else {
-        fprintf(fileTS, "%-38s  --         --                                     --\n", data.nombre, data.valor, data.longitud);
-    }
-}
 
 int validarRangoInt(char *num) {
     errno = 0;

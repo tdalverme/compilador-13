@@ -1,17 +1,19 @@
 %{
-    #include <string.h>
+    #include "utilidades/lista.h"
+    #include "utilidades/arbol.h"
     #include <process.h>
-    #include "Sintactico.tab.h"
-    #include "arbol.h"
+    #include <stdio.h>
     
     FILE *yyin;
     FILE *dotFile;
+    FILE *tsFile;
 
     int yylex();
     int _contar_cont;
     void yyerror(char const *);
 
     struct sNodo *_pivot, *A;
+    Lista lista_id;
 %}
 
 
@@ -54,6 +56,7 @@
     %left T_RESTA
     %left T_MULT
     %left T_DIV
+    %right MENOS_UNARIO
     %token T_PYC
     %token T_LL_A
     %token T_LL_C
@@ -108,6 +111,8 @@
     dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC{
         printf("\tDeclaracion de constante\n");
         $$ = crear_nodo("ASIG_CTE", crear_hoja($2), $4);
+        modificarTipo(&tabla_simbolos, $2, TS_INT);
+        modificarValor(&tabla_simbolos, $2, $4->label);
     }
     valor_cte : T_CTE_FLOAT { 
         char label[128];
@@ -254,29 +259,69 @@
     }
 
     // LISTA DE IDS
-    lista_ids : lista_ids T_COMA T_ID
-    | T_ID
+    lista_ids : lista_ids T_COMA T_ID {
+        DataTS newData;
+
+        newData.nombre = $3;
+        newData.tipo = -1;
+
+        push(&lista_id, &newData);
+    }
+    | T_ID {
+        if(lista_id.head == NULL) {
+            init(&lista_id);
+        } else {
+            empty(&lista_id);
+        }
+
+        DataTS newData;
+
+        newData.nombre = $1;
+        newData.tipo = -1;
+
+        push(&lista_id, &newData);
+    }
 
     // LISTA DE TIPOS DE DATOS
     lista_tipos : lista_tipos T_COMA tipo | tipo
-    tipo : T_INTEGER | T_FLOAT | T_STRING
+    tipo : T_INTEGER {
+        DataTS actual = pop(&lista_id);
+        modificarTipo(&tabla_simbolos, actual.nombre, TS_INT);
+    }
+    | T_FLOAT {
+        DataTS actual = pop(&lista_id);
+        modificarTipo(&tabla_simbolos, actual.nombre, TS_FLOAT);
+    }
+    | T_STRING {
+        DataTS actual = pop(&lista_id);
+        modificarTipo(&tabla_simbolos, actual.nombre, TS_STRING);
+    }
 %%
 
 int main (int argc, char *argv[]) {
     
     if((yyin = fopen(argv[1], "rt")) == NULL) {
         fprintf(stderr, "\nNo se pudo abrir el archivo \'%s\'", argv[1]);
+        return -1;
     } else {
         yyparse();
     }
 
-    if((dotFile = fopen("./arbol.dot", "wt")) == NULL) {
-        fprintf(stderr, "\nNo se pudo abrir el archivo \'arbol.dot\'");
+    if((tsFile = fopen("ts.txt", "wt")) == NULL) {
+        fprintf(stderr, "\nNo se pudo abrir el archivo \'ts.txt\'");
+        return -2;
+    } else {
+        listaToFile(&tabla_simbolos, tsFile);
+    }
+
+    if((dotFile = fopen("./intermedia.dot", "wt")) == NULL) {
+        fprintf(stderr, "\nNo se pudo abrir el archivo \'intermedia.dot\'");
+        return -3;
     } else {
         escribirDotFile(dotFile, A, 0);
         fclose(dotFile);
-        system("dot -Tpng \"arbol.dot\" -o arbol.png");
-        system("del \"arbol.dot\"");
+        system("dot -Tpng \"intermedia.dot\" -o intermedia.png");
+        system("del \"intermedia.dot\"");
     }
 
     fclose(yyin);

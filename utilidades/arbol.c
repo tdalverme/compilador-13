@@ -1,16 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-typedef struct sNodo  
-{ 
-  char *label; 
-  struct sNodo *izq; 
-  struct sNodo *der; 
-} Node;
-
-void posorder(Node *);
-void inorder(Node *);
-int inorderToFile(FILE *, Node *, int);
+#include "arbol.h"
 
 Node* crearNodo(char* data) 
 { 
@@ -67,15 +55,9 @@ int inorderToFile(FILE *f, Node * n, int i) {
 }
 
 void inorder(Node * n) {
-	if(n->izq) posorder(n->izq);
+	if(n->izq) inorder(n->izq);
 	printf("%s ", n->label);
-	if(n->der) posorder(n->der);
-}
-
-void posorder(Node * n) {
-	printf("%s ", n->label);
-	if(n->izq) posorder(n->izq);
-	if(n->der) posorder(n->der);
+	if(n->der) inorder(n->der);
 }
 
 void escribirDotFile(FILE *f, Node *arbol, int i) {

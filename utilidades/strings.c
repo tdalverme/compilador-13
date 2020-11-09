@@ -1,12 +1,7 @@
+#include "strings.h"
 #include <stdio.h>
 #include <stdlib.h>
-
-#define SIN_VALOR "VALOR_NULO"
-
-void replaceAll(char *, char, char);
-char *removeAll(char *, char);
-char *getNombreFormateado(char *);
-
+#include <string.h>
 
 char *getNombreFormateado(char *nombre) {
     char * nombre_sin_espacios = (char *)malloc(strlen(nombre) + 2);
