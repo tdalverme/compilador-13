@@ -2,5 +2,5 @@ lex.yy.c
 Sintactico.tab.c
 Sintactico.tab.h
 ts.txt
-arbol.png
+intermedia.png
 test.txt
