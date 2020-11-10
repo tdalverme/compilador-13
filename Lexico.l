@@ -12,8 +12,8 @@
     #define MAX_CARACTERES_STRING 30
     #define ERROR_LEXICO -1
     #define FUERA_DE_RANGO -2
-    #define MIN_INT -256
-    #define MAX_INT 255
+    #define MIN_INT -32768
+    #define MAX_INT 32767
 
     FILE *yyin;
     FILE *fileTS;
@@ -198,7 +198,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     //printf("Constante entera: %s\n\n", yytext);
 
     if(validarRangoInt(yytext) == FUERA_DE_RANGO) {
-        printf("\nError lexico, entero fuera de rango [-256 ; 255]: %s", yytext);
+        printf("\nError lexico, entero fuera de rango [%d ; %d]: %s", MIN_INT, MAX_INT, yytext);
         return ERROR_LEXICO;
     }
     else {
@@ -403,7 +403,7 @@ int validarRangoInt(char *num) {
         return FUERA_DE_RANGO;
     }
     else {
-        if(resultado >= -256 && resultado <= 255) {
+        if(resultado >= MIN_INT && resultado <= MAX_INT) {
             return 1;
         }
     }
