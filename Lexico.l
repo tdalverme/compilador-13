@@ -23,6 +23,7 @@
     int validarRangoFloat(char *);
 
     int esConst = 0;
+    int stringCont = 0;
 %}
 
 %option noyywrap
@@ -31,7 +32,7 @@
 
 DIGITO      [0-9]
 LETRA       [a-zA-Z]
-SIMBOLO     [;:,./[\]()&!¡#$%=?¿+\-_*<>]
+SIMBOLO     [;:./[\]()&!¡#$%=?¿+\-_*<>]
 ESPACIOS    [ \t\n\r]
 
 CTE_STRING  \"({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*\"
@@ -58,29 +59,35 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
     DataTS newData;
 
-    newData.nombre = strdup(getNombreFormateado(yytext));
-    newData.tipo = TS_STRING;
-    newData.valor = strdup(yytext);
-    newData.longitud = strlen(yytext);
+    char *valor = (char *)malloc(strlen("_str") + 4);
+    snprintf(valor, strlen("_str") + 4, "str%d", stringCont++);
 
+    newData.nombre = (char *)malloc(strlen(valor));
+    strcpy(newData.nombre, valor);
+    
+    newData.tipo = TS_STRING;
+    
+    newData.valor = (char *)malloc(strlen(yytext) - 1);
+    strcpy(newData.valor, removeAll(yytext, '\"'));
+    
+    newData.longitud = strlen(newData.valor);
     push(&tabla_simbolos, &newData);
 
-    yylval.string = strdup(removeAll(yytext, '\"'));
+    yylval.string = (char *)malloc(strlen(valor) + 1);
+    strcpy(yylval.string, valor);
+
     return T_CTE_STRING;
 }
 
 ":=" {
-    yylval.string = ":=";
     return T_ASIG;
 }
 
 ":" {
-    yylval.string = ":";
     return T_ASIG;
 }
 
 "=" {
-    yylval.string = "=";
     return T_ASIG;
 }
 
@@ -155,13 +162,11 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 "AND" {
     //printf("Operador AND: %s\n\n", yytext);
-    yylval.string = "AND";
     return T_AND;
 }
 
 "OR" {
     //printf("Operador AND: %s\n\n", yytext);
-    yylval.string = "OR";
     return T_OR;
 }
 
@@ -173,11 +178,16 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     }
 
     DataTS newData;
-    char *nombreFormateado = getNombreFormateado(yytext);
-
+    
+    char *nombreFormateado = (char *)malloc(strlen(getNombreFormateado(yytext)) + 1);
+    strcpy(nombreFormateado, getNombreFormateado(yytext));
+    
     if(esConst == T_CONST) {
         newData.nombre = (char *)malloc(strlen(nombreFormateado) + 7);
-        strcpy(newData.nombre, "_CONST");
+        if(!strcpy(newData.nombre, "_CONST"))
+            printf("NULL\n");
+        
+        esConst = 0;
     } else {
         newData.nombre = (char *)malloc(strlen(nombreFormateado) + 1);
         newData.nombre[0] = '\0';
@@ -185,11 +195,15 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
     strcat(newData.nombre, nombreFormateado);
     newData.tipo = TS_ID;
-    newData.valor = NULL;
+    newData.valor = (char *)malloc(1);
+    strcpy(newData.valor, "");
     newData.longitud = -1;
     
     push(&tabla_simbolos, &newData);
-    yylval.string = strdup(newData.nombre);
+
+    yylval.string = (char *)malloc(strlen(newData.nombre) + 1);
+    if(!strcpy(yylval.string, newData.nombre))
+        printf("NULL\n");
     
     return T_ID;
 }
@@ -205,20 +219,24 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         if(tabla_simbolos.head == NULL) {
             init(&tabla_simbolos);
         }
+        
+        DataTS newData;
 
-        if(esConst == T_CONST) {
-            esConst = 0;
-        } else {
-            DataTS newData;
+        char *nombreFormateado = getNombreFormateado(yytext);
+        
+        newData.nombre = (char *)malloc(strlen(nombreFormateado) + 1);
+        if(!strcpy(newData.nombre, nombreFormateado))
+            printf("NULL\n");
 
-            newData.nombre = strdup(getNombreFormateado(yytext));
-            newData.tipo = TS_INT;
-            newData.valor = strdup(yytext);
-            newData.longitud = -1;
+        newData.tipo = TS_INT;
 
-            push(&tabla_simbolos, &newData);
-            esConst = 0;
-        }
+        newData.valor = (char *)malloc(strlen(yytext) + 1);
+        if(!strcpy(newData.valor, yytext))
+            printf("NULL\n");
+
+        newData.longitud = -1;
+
+        push(&tabla_simbolos, &newData);
         
         yylval.integer = atoi(yytext);
         return T_CTE_INT;
@@ -239,9 +257,18 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
         DataTS newData;
         
-        newData.nombre = strdup(getNombreFormateado(yytext));
+        char *nombreFormateado = getNombreFormateado(yytext);
+
+        newData.nombre = (char *)malloc(strlen(nombreFormateado + 1));
+        if(!strcpy(newData.nombre, nombreFormateado))
+            printf("NULL\n");
+            
         newData.tipo = TS_FLOAT;
-        newData.valor = strdup(yytext);
+
+        newData.valor = (char *)malloc(strlen(yytext) + 1);
+        if(!strcpy(newData.valor, yytext))
+            printf("NULL\n");
+
         newData.longitud = -1;
 
         push(&tabla_simbolos, &newData);
@@ -253,43 +280,48 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 "<>" {
     //printf("Operador desigualdad: %s\n\n", yytext);
-    yylval.string = "<>";
+    yylval.string = (char *)malloc(3);
+    strcpy(yylval.string, "<>");
     return T_DISTINTO;
 }
 
 "==" {
     //printf("Operador igualdad: %s\n\n", yytext);
-    yylval.string = "==";
+    yylval.string = (char *)malloc(3);
+    strcpy(yylval.string, "==");
     return T_IGUAL;
 }
 
 "," {
     //printf("Coma: %s\n\n", yytext);
-    yylval.string = ",";
     return T_COMA;
 }
 
 "<=" {
     //printf("Operador menor o igual: %s\n\n", yytext);
-    yylval.string = "<=";
+    yylval.string = (char *)malloc(3);
+    strcpy(yylval.string, "<=");
     return T_MENORIGUAL;
 }
 
 "<" {
     //printf("Operador menor: %s\n\n", yytext);
-    yylval.string = "<";
+    yylval.string = (char *)malloc(2);
+    strcpy(yylval.string, "<");
     return T_MENOR;
 }
 
 ">=" {
     //printf("Operador mayor o igual: %s\n\n", yytext);
-    yylval.string = ">=";
+    yylval.string = (char *)malloc(3);
+    strcpy(yylval.string, ">=");
     return T_MAYORIGUAL;
 }
 
 ">" {
     //printf("Operador mayor: %s\n\n", yytext);
-    yylval.string = ">";
+    yylval.string = (char *)malloc(2);
+    strcpy(yylval.string, ">");
     return T_MAYOR;
 }
 
@@ -371,30 +403,6 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 }
 %%
 
-
-/*
-int main(int argc, char *argv[]) {
-    
-    tabla_simbolos.tabla = (FilaTS *)malloc(sizeof(struct FilaTS));
-
-    if((yyin = fopen(argv[1], "rt")) == NULL) {
-        fprintf(stderr, "\nNo se pudo abrir el archivo \'%s\'", argv[1]);
-    } else {
-        yylex();
-                
-        if((fileTS = fopen("ts.txt", "wt")) == NULL) {
-            fprintf(stderr, "\nNo se pudo crear el archivo de la tabla de simbolos.");
-        } else {
-            escribirTablaSimbolos();
-            fclose(fileTS);
-        }
-    }
-
-    fclose(yyin);
-    return 1;
-}
-*/
-
 int validarRangoInt(char *num) {
     errno = 0;
     long int resultado = strtol(num, NULL, 10);
@@ -410,7 +418,6 @@ int validarRangoInt(char *num) {
 
     return FUERA_DE_RANGO;
 }
-
 
 int validarRangoFloat(char *num) {
     errno = 0;

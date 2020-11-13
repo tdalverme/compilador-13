@@ -40,6 +40,7 @@ int modificarValor(Lista *, char *, char *);
 int modificarLongitud(Lista *, char *, int);
 DataTS *verUltimo(Lista *);
 void listaToFile(Lista *, FILE *);
+void freeLista(Lista *);
 
 extern Lista tabla_simbolos;
 

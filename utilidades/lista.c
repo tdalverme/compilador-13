@@ -8,11 +8,24 @@ void init(Lista *lista) {
 }
 
 int push(Lista *lista, DataTS *data) {
-    Nodo *nuevo = (Nodo *) malloc(sizeof(Nodo));
-    nuevo->data = *data;
-    nuevo->sig = NULL;
-    
+
     if (lista->head == NULL) {
+        Nodo *nuevo = (Nodo *) malloc(sizeof(Nodo));
+    
+        nuevo->data.nombre = (char *)malloc(strlen(data->nombre) + 1);
+        strcpy(nuevo->data.nombre, data->nombre);
+
+        if(strcmp(data->valor, "") != 0) {
+            nuevo->data.valor = (char *)malloc(strlen(data->valor) + 1);
+            strcpy(nuevo->data.valor, data->valor);
+        }
+
+        nuevo->data.longitud = data->longitud;
+
+        nuevo->data.tipo = data->tipo;
+        
+        nuevo->sig = NULL;
+
         lista->head = nuevo;
         lista->tail = nuevo;
     } else {
@@ -32,6 +45,22 @@ int push(Lista *lista, DataTS *data) {
         if(strcmp(actual->data.nombre, data->nombre) == 0 || strcmp(actual->data.nombre, nombreCte) == 0) {
             return -1;
         } else {
+            Nodo *nuevo = (Nodo *) malloc(sizeof(Nodo));
+
+            nuevo->data.nombre = (char *)malloc(strlen(data->nombre) + 1);
+            strcpy(nuevo->data.nombre, data->nombre);
+
+
+            if(data->valor) {
+                nuevo->data.valor = (char *)malloc(strlen(data->valor) + 1);
+                strcpy(nuevo->data.valor, data->valor);
+            }
+            nuevo->data.longitud = data->longitud;
+
+            nuevo->data.tipo = data->tipo;
+            
+            nuevo->sig = NULL;
+
             actual->sig = nuevo;
             lista->tail = nuevo;
         }
@@ -102,7 +131,8 @@ int modificarValor(Lista *lista, char *nombre, char *nuevoValor) {
 
         while (actual != NULL) {
             if(strcmp(actual->data.nombre, nombre) == 0) {
-                actual->data.valor = strdup(nuevoValor);
+                actual->data.valor = (char *)malloc(strlen(nuevoValor) + 1);
+                strcpy(actual->data.valor, nuevoValor);
                 return 1;
             } else {
                 actual = actual->sig;
@@ -133,8 +163,6 @@ int modificarLongitud(Lista *lista, char *nombre, int nuevaLongitud) {
 }
 
 DataTS *verUltimo(Lista *lista) {
-    Nodo *sig = NULL;
-
     if (lista->head == NULL) {
         fprintf(stderr, "Head no apunta a nada.\n");
         return NULL;
@@ -156,14 +184,42 @@ void listaToFile(Lista *lista, FILE *file) {
     while(actual != NULL) {
         fprintf(file, "%-38s  ", actual->data.nombre);
 
+        char *valor;
+        if(actual->data.valor == NULL) {
+            valor = (char *)malloc(1);
+            strcpy(valor, "");
+        } else {
+            valor = (char *)malloc(strlen(actual->data.valor) + 1);
+            strcpy(valor, actual->data.valor);
+        }
+
+
         if(actual->data.tipo == TS_INT) {
-            fprintf(file, "Integer    %-38s --\n", actual->data.valor);
+            fprintf(file, "Integer    %-38s --\n", valor);
         } else if(actual->data.tipo == TS_FLOAT) {
-            fprintf(file, "Float      %-38s --\n", actual->data.valor);
+            fprintf(file, "Float      %-38s --\n", valor);
         } else if(actual->data.tipo == TS_STRING) {
-            fprintf(file, "String     %-38s %d\n", actual->data.valor, actual->data.longitud);
+            fprintf(file, "String     %-38s %d\n", valor, actual->data.longitud);
         }
 
         actual = actual->sig;
     }
+}
+
+void freeLista(Lista *lista)
+{
+   Nodo* tmp;
+
+   while (lista->head != NULL)
+   {
+       tmp = lista->head;
+       lista->head = lista->head->sig;
+       free(tmp->data.nombre);
+       free(tmp->data.valor);
+       free(tmp);
+   }
+
+    free(lista->head);
+    free(lista->tail);
+    free(lista);
 }

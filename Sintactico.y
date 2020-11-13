@@ -26,7 +26,7 @@
     }
 
     // TOKENS
-    %token <string> T_STRING
+    %token T_STRING
     %token <string> T_CTE_STRING
     %token T_DIM
     %token T_AS
@@ -45,14 +45,14 @@
     %right T_ASIG
     %token <string> T_DISTINTO
     %token <string> T_IGUAL
-    %token <string> T_NOT
-    %token <string> T_COMA
+    %token T_NOT
+    %token T_COMA
     %token <string> T_MENORIGUAL
     %token <string> T_MENOR
     %token <string> T_MAYORIGUAL
     %token <string> T_MAYOR
-    %token <string> T_AND
-    %token <string> T_OR
+    %token T_AND
+    %token T_OR
     %left T_SUMA
     %left T_RESTA
     %left T_MULT
@@ -99,10 +99,9 @@
     programa : conj_sentencias { A = $$; }
     bloque : T_LL_A conj_sentencias T_LL_C {
         printf("Bloque\n");
-        //BLOQUE = CONJ_SENT;
         $$ = $2;
     }
-    conj_sentencias : conj_sentencias sentencia { $$ = crear_nodo("CONJ", $1, $2) } | conj_sentencias bloque { $$ = crear_nodo("BLOQUE", $1, $2) } | sentencia | bloque
+    conj_sentencias : conj_sentencias sentencia { $$ = crear_nodo("CONJ", $1, $2);  } | conj_sentencias bloque { $$ = crear_nodo("BLOQUE", $1, $2); } | sentencia | bloque
     sentencia : asignacion | put | get | while_loop | sentencia_if_else | sentencia_if | dec_variables | dec_const | error { yyerror("Error sintactico"); YYABORT; }
     
 
@@ -110,15 +109,20 @@
     dec_variables : T_DIM T_MENOR lista_ids T_MAYOR T_AS T_MENOR lista_tipos T_MAYOR T_PYC {
         printf("\tDeclaracion de variables\n");
         $$ = $7;
+        free($2);
+        free($4);
+        free($6);
+        free($8);
     }
 
 
     // DECLARACION CONSTANTES
-    dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC{
+    dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC {
         printf("\tDeclaracion de constante\n");
         $$ = crear_nodo("ASIG_CTE", crear_hoja($2), $4);
         modificarTipo(&tabla_simbolos, $2, TS_INT);
         modificarValor(&tabla_simbolos, $2, $4->label);
+        free($2);
     }
     valor_cte : T_CTE_FLOAT { 
         char label[128];
@@ -126,21 +130,28 @@
         $$ = crear_hoja(label);
     }
     | T_CTE_INT {
-        char label[5];
+        char label[10];
         itoa($1, label, 10);
         $$ = crear_hoja(label);
     }
     | T_CTE_STRING {
         $$ = crear_hoja($1);
+        free($1);
     }
 
 
     // ASIGNACION
     asignacion : T_ID T_ASIG right_side T_PYC {
         printf("\tAsignacion\n");
-        $$ = crear_nodo(":=", crear_hoja($<string>1), $3)
+        $$ = crear_nodo(":=", crear_hoja($1), $3);
+
+        free($1);
     }
-    right_side : expresion { $$ = $1; } | T_CTE_STRING { $$ = crear_hoja($1); }
+    right_side : expresion { $$ = $1; }
+    | T_CTE_STRING { 
+        $$ = crear_hoja($1);
+        free($1);
+    }
 
 
     // PUT
@@ -148,13 +159,18 @@
         printf("\tSentencia PUT\n");
         $$ = crear_nodo("PRINT", $2, NULL);
     }
-    valor_string : T_ID { $$ = crear_hoja($1); } | T_CTE_STRING { $$ = crear_hoja($1); }
+    valor_string : T_ID { $$ = crear_hoja($1); free($1); }
+    | T_CTE_STRING {
+        $$ = crear_hoja($1);
+        free($1);
+    }
 
 
     // GET
     get : T_GET T_ID T_PYC {
         printf("\tSentencia GET\n");
         $$ = crear_nodo("READ", crear_hoja($2), NULL);
+        free($2);
     }
 
 
@@ -188,12 +204,13 @@
         $$ = crear_nodo("OR", $1, $3);
     }
     | T_NOT condicion {
-        $$ = crear_nodo("NOT", $2, NULL);
+        $$ = crear_nodo("NOT", NULL, $2);
     }
     | condicion
     
     condicion : expresion operador_condicional expresion {
         $$ = crear_nodo($2, $1, $3);
+        free($2);
     }
     operador_condicional : T_MAYOR | T_MENOR | T_MAYORIGUAL | T_MENORIGUAL | T_IGUAL | T_DISTINTO
 
@@ -235,6 +252,7 @@
     }
     | T_ID {
         $$ = crear_hoja($1);
+        free($1);
     }
     | T_CTE_INT {
         char label[5];
@@ -268,10 +286,14 @@
     lista_ids : lista_ids T_COMA T_ID {
         DataTS newData;
 
-        newData.nombre = $3;
+        newData.nombre = (char *)malloc(strlen($3) + 1);
+        strcpy(newData.nombre, $3);
+        newData.valor = (char *)malloc(1);
+        strcpy(newData.valor, "");
         newData.tipo = -1;
 
         push(&lista_id, &newData);
+        free($3);
     }
     | T_ID {
         if(lista_id.head == NULL) {
@@ -282,10 +304,14 @@
 
         DataTS newData;
 
-        newData.nombre = $1;
+        newData.nombre = (char *)malloc(strlen($1) + 1);
+        newData.valor = (char *)malloc(1);
+        strcpy(newData.valor, "");
+        strcpy(newData.nombre, $1);
         newData.tipo = -1;
 
         push(&lista_id, &newData);
+        free($1);
     }
 
     // LISTA DE TIPOS DE DATOS
@@ -328,18 +354,23 @@ int main (int argc, char *argv[]) {
         listaToFile(&tabla_simbolos, tsFile);
     }
 
-    if((dotFile = fopen("./intermedia.dot", "wt")) == NULL) {
+    if((dotFile = fopen("intermedia.dot", "wt")) == NULL) {
         fprintf(stderr, "\nNo se pudo abrir el archivo \'intermedia.dot\'");
         return -3;
     } else {
         escribirDotFile(dotFile, A, 0);
         fclose(dotFile);
-        system("dot -Tpng \"intermedia.dot\" -o intermedia.png");
+        system("dot -Gcharset=latin1 -Tpng \"intermedia.dot\" -o intermedia.png");
         system("del \"intermedia.dot\"");
     }
 
     fclose(yyin);
-    return 1;     
+    freeLista(&lista_id);
+    freeLista(&tabla_simbolos);
+    freeArbol(A);
+    free(_pivot);
+
+    return 1;
 }
 
 void yyerror(char const *s) {

@@ -12,12 +12,12 @@ typedef struct sNodo
   struct sNodo *der; 
 } Node;
 
-int inorderToFile(FILE *, Node *, int);
 Node *crearNodo(char *);
 Node *crear_hoja(char *);
 Node *crear_nodo(char *, Node *izq, Node *);
-int inorderToFile(FILE *, Node *, int);
+int inorderToFile(FILE *, Node *, unsigned int);
 void inorder(Node *);
-void escribirDotFile(FILE *, Node *, int);
+void escribirDotFile(FILE *, Node *, unsigned int);
+void freeArbol(Node *);
 
 #endif
