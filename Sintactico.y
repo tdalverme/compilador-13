@@ -360,8 +360,8 @@ int main (int argc, char *argv[]) {
     } else {
         escribirDotFile(dotFile, A, 0);
         fclose(dotFile);
-        system("dot -Gcharset=latin1 -Tpng \"intermedia.dot\" -o intermedia.png");
-        system("del \"intermedia.dot\"");
+        system(".\\Graphviz\\bin\\dot.exe -Gcharset=latin1 -Tpng \"intermedia.dot\" -o intermedia.png");
+        //system("del \"intermedia.dot\"");
     }
 
     fclose(yyin);
