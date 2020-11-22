@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+Lista tabla_simbolos;
+
 void init(Lista *lista) {
     lista->head = NULL;
     lista->tail = NULL;
@@ -176,6 +178,7 @@ void listaToFile(Lista *lista, FILE *file) {
     if(file == NULL) {
         return;
     }
+    
 
     fprintf(file, "NOMBRE                                  TIPO       VALOR                                  LONGITUD\n");
 
@@ -196,14 +199,21 @@ void listaToFile(Lista *lista, FILE *file) {
 
         if(actual->data.tipo == TS_INT) {
             fprintf(file, "Integer    %-38s --\n", valor);
-        } else if(actual->data.tipo == TS_FLOAT) {
+        } else if(actual->data.tipo == TS_ID_INT) {
+            fprintf(file, "Integer    %-38s --\n", "--");
+        } else if(actual->data.tipo == TS_FLOAT ) {
             fprintf(file, "Float      %-38s --\n", valor);
+        } else if(actual->data.tipo == TS_ID_FLOAT) {
+            fprintf(file, "Float      %-38s --\n", "--");
+        } else if(actual->data.tipo == TS_ID_STRING) {
+            fprintf(file, "String      %-38s --\n", "--");
         } else if(actual->data.tipo == TS_STRING) {
             fprintf(file, "String     %-38s %d\n", valor, actual->data.longitud);
         }
 
         actual = actual->sig;
     }
+
 }
 
 void freeLista(Lista *lista)
@@ -222,4 +232,83 @@ void freeLista(Lista *lista)
     free(lista->head);
     free(lista->tail);
     free(lista);
+}
+
+int getTipo(Lista *lista, char *nombre) {
+    Nodo *actual = lista->head;
+    char *nombreCte = (char *)malloc(7 + sizeof(strlen(nombre)));
+    strcpy(nombreCte, "_CONST");
+    strcat(nombreCte, nombre);
+
+    while (actual != NULL) {
+        if(strcmp(actual->data.nombre, nombre) == 0 || strcmp(actual->data.nombre, nombreCte) == 0) {
+            return actual->data.tipo;
+        } else {
+            actual = actual->sig;
+        }
+    }
+    
+    free(nombreCte);
+    return -1;
+}
+
+int existe(Lista *lista, char *nombre) {
+    Nodo *actual = lista->head;
+
+    while (actual != NULL) {
+        if(strcmp(actual->data.nombre, nombre) == 0) {
+            return 1;
+        } else {
+            actual = actual->sig;
+        }
+    }
+
+    return 0;
+}
+
+int tiposCompatibles(char *n1, char *n2) {
+    int t1 = getTipo(&tabla_simbolos, n1);
+    int t2 = getTipo(&tabla_simbolos, n2);
+
+    if(t1 == TS_STRING || t2 == TS_STRING || t1 == TS_ID_STRING || t2 == TS_ID_STRING)
+        return 0;
+
+    return 1;
+}
+
+int esConstante(char *nombre) {
+    Nodo *actual = tabla_simbolos.head;
+
+    char *nombreCte = (char *)malloc(7 + sizeof(strlen(nombre)));
+    strcpy(nombreCte, "_CONST");
+    strcat(nombreCte, nombre);
+
+    while (actual != NULL) {
+        if(strcmp(actual->data.nombre, nombreCte) == 0) {
+            return 1;
+        } else {
+            actual = actual->sig;
+        }
+    }
+
+    return 0;
+}
+
+int asignacionCompatible(char *n1, char *n2) {
+    int t1 = getTipo(&tabla_simbolos, n1);
+    int t2 = getTipo(&tabla_simbolos, n2);
+
+    if(t1 == t2)
+        return 1;
+
+    if((t1 == TS_FLOAT || t1 == TS_ID_FLOAT) && (t2 == TS_INT || t2 == TS_ID_INT))
+        return 1;
+
+    if((t1 == TS_INT || t1 == TS_ID_INT) && (t2 == TS_FLOAT || t2 == TS_ID_FLOAT))
+        return 0;
+
+    if((t1 == TS_STRING && t2 == TS_ID_STRING) || (t1 == TS_ID_STRING || t2 == TS_STRING))
+        return 1;
+
+    return 1;
 }

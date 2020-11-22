@@ -4,29 +4,34 @@
 #include <string.h>
 
 char *getNombreFormateado(char *nombre) {
-    char *nombre_sin_espacios = (char *)malloc(strlen(nombre));
+    char *nombre_sin_espacios = (char *)malloc(strlen(nombre) + 1);
     
-    replaceAll(nombre, ' ', '_');        
-    nombre = removeAll(nombre, '\"');
+    strcpy(nombre_sin_espacios, nombre);
 
-    snprintf(nombre_sin_espacios, strlen(nombre) + 2, "_%s", nombre);
+    replaceAll(nombre_sin_espacios, ' ', '_');        
+    nombre_sin_espacios = removeAll(nombre_sin_espacios, '\"');
+
+    snprintf(nombre_sin_espacios, strlen(nombre_sin_espacios) + 2, "_%s", nombre);
 
     return nombre_sin_espacios;
 }
 
-void replaceAll(char *str, char oldChar, char newChar)
+char *replaceAll(char *str, char oldChar, char newChar)
 {
     int i = 0;
+    char *aux = strdup(str);
 
-    while(str[i] != '\0')
+    while(aux[i] != '\0')
     {
-        if(str[i] == oldChar)
+        if(aux[i] == oldChar)
         {
-            str[i] = newChar;
+            aux[i] = newChar;
         }
 
         i++;
     }
+
+    return aux;
 }
 
 char *removeAll(char *str, char toRemove)

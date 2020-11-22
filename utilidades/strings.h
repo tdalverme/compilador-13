@@ -3,7 +3,7 @@
 
 #define SIN_VALOR "VALOR_NULO"
 
-void replaceAll(char *, char, char);
+char *replaceAll(char *, char, char);
 char *removeAll(char *, char);
 char *getNombreFormateado(char *);
 

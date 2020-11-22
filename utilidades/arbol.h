@@ -19,5 +19,6 @@ int inorderToFile(FILE *, Node *, unsigned int);
 void inorder(Node *);
 void escribirDotFile(FILE *, Node *, unsigned int);
 void freeArbol(Node *);
+Node *copiarArbol(Node *);
 
 #endif

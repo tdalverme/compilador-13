@@ -71,3 +71,16 @@ void freeArbol(Node *n) {
     free(n->label);
     free(n);
 }
+
+Node *copiarArbol(Node *root) {
+    if(root == NULL)
+        return root;
+
+   Node *temp = (Node *)malloc(sizeof(Node));
+
+   temp->label = root->label;
+   temp->izq = copiarArbol(root->izq);
+   temp->der = copiarArbol(root->der);
+
+   return temp;
+}

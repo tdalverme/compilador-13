@@ -17,7 +17,8 @@
 
     FILE *yyin;
     FILE *fileTS;
-    Lista tabla_simbolos;
+
+    extern Lista tabla_simbolos;
 
     int validarRangoInt(char *);
     int validarRangoFloat(char *);
@@ -60,9 +61,9 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     DataTS newData;
 
     char *valor = (char *)malloc(strlen("_str") + 4);
-    snprintf(valor, strlen("_str") + 4, "str%d", stringCont++);
+    snprintf(valor, strlen("_str") + 4, "_str%d", stringCont++);
 
-    newData.nombre = (char *)malloc(strlen(valor));
+    newData.nombre = (char *)malloc(strlen(valor) + 1);
     strcpy(newData.nombre, valor);
     
     newData.tipo = TS_STRING;
@@ -181,7 +182,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     
     char *nombreFormateado = (char *)malloc(strlen(getNombreFormateado(yytext)) + 1);
     strcpy(nombreFormateado, getNombreFormateado(yytext));
-    
+
     if(esConst == T_CONST) {
         newData.nombre = (char *)malloc(strlen(nombreFormateado) + 7);
         if(!strcpy(newData.nombre, "_CONST"))
@@ -195,14 +196,14 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
     strcat(newData.nombre, nombreFormateado);
     newData.tipo = TS_ID;
-    newData.valor = (char *)malloc(1);
-    strcpy(newData.valor, "");
+    newData.valor = (char *)malloc(2);
+    strcpy(newData.valor, " ");
     newData.longitud = -1;
     
     push(&tabla_simbolos, &newData);
 
-    yylval.string = (char *)malloc(strlen(newData.nombre) + 1);
-    if(!strcpy(yylval.string, newData.nombre))
+    yylval.string = (char *)malloc(strlen(getNombreFormateado(yytext)) + 1);
+    if(!strcpy(yylval.string, getNombreFormateado(yytext)))
         printf("NULL\n");
     
     return T_ID;
@@ -257,12 +258,20 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
         DataTS newData;
         
+        char label[128];
+        snprintf(label, sizeof(label), "_%g", atof(yytext));
+
+        /**
         char *nombreFormateado = getNombreFormateado(yytext);
 
         newData.nombre = (char *)malloc(strlen(nombreFormateado + 1));
         if(!strcpy(newData.nombre, nombreFormateado))
             printf("NULL\n");
-            
+        **/
+
+        if(!strcpy(newData.nombre, replaceAll(label, '.', '_')))
+            printf("NULL\n");
+
         newData.tipo = TS_FLOAT;
 
         newData.valor = (char *)malloc(strlen(yytext) + 1);

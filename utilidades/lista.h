@@ -10,6 +10,9 @@
 #define TS_FLOAT 5
 #define TS_STRING 6
 #define TS_ID 7
+#define TS_ID_INT 8
+#define TS_ID_FLOAT 9
+#define TS_ID_STRING 10
 
 #include <stdio.h>
 
@@ -41,6 +44,11 @@ int modificarLongitud(Lista *, char *, int);
 DataTS *verUltimo(Lista *);
 void listaToFile(Lista *, FILE *);
 void freeLista(Lista *);
+int getTipo(Lista *, char *);
+int existe(Lista *, char *);
+int tiposCompatibles(char *, char *);
+int asignacionCompatible(char *, char *);
+int esConstante(char *);
 
 extern Lista tabla_simbolos;
 
