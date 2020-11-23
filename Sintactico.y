@@ -103,7 +103,7 @@
     %start programa
 %%
     // REGLAS
-    programa : conj_sentencias { 
+    programa : conj_sentencias {
         fprintf(f_reglas, "Fin programa\n");
         A = $$;
         arbol_aux = copiarArbol(A);        
@@ -112,11 +112,11 @@
             fprintf(stderr, "\nNo se pudo abrir el archivo \'intermedia.dot\'");
             return -3;
         } else {
-            printf("Generando imagen del arbol sintactico...\n");
+            printf("Generando archivo .dot...\n");
             escribirDotFile(dotFile, A, 0);
             fclose(dotFile);
-            system(".\\Graphviz\\bin\\dot.exe -Gcharset=latin1 -Tpng \"intermedia.dot\" -o intermedia.png");
-            system("del \"intermedia.dot\"");
+            //system("\"./Graphviz/bin/dot.exe\" -Gcharset=latin1 -Tpng \"intermedia.dot\" -o \"intermedia.png\"");
+            //system("del \"intermedia.dot\"");
         }
 
         printf("Generando assembler...\n");
