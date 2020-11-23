@@ -512,11 +512,7 @@ int main (int argc, char *argv[]) {
     freeArbol(A);
     freeArbol(arbol_aux);
     free(_pivot);
-
-    FILE *f = fopen("aaaaaaaaaaaa.txt", "w");
-
-    fprintf(f, "Hola");
-
+    
     return 1;
 }
 
