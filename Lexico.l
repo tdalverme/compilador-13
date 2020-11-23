@@ -200,7 +200,9 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
     strcpy(newData.valor, " ");
     newData.longitud = -1;
     
-    push(&tabla_simbolos, &newData);
+    if(!existe(&tabla_simbolos, newData.nombre)){
+        push(&tabla_simbolos, &newData);
+    }
 
     yylval.string = (char *)malloc(strlen(getNombreFormateado(yytext)) + 1);
     if(!strcpy(yylval.string, getNombreFormateado(yytext)))
@@ -246,7 +248,6 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
 
 {CTE_FLOAT} {
     //printf("Constante flotante: %s\n\n", yytext);
-
     if(validarRangoFloat(yytext) == FUERA_DE_RANGO) {
         printf("\nError lexico, numero flotante fuera de rango [-%g ; %g]: %s", FLT_MAX, FLT_MAX, yytext);
         return ERROR_LEXICO;
@@ -261,14 +262,7 @@ COMENTARIO  \*-({DIGITO}|{SIMBOLO}|{LETRA}|{ESPACIOS})*-\*
         char label[128];
         snprintf(label, sizeof(label), "_%g", atof(yytext));
 
-        /**
-        char *nombreFormateado = getNombreFormateado(yytext);
-
-        newData.nombre = (char *)malloc(strlen(nombreFormateado + 1));
-        if(!strcpy(newData.nombre, nombreFormateado))
-            printf("NULL\n");
-        **/
-
+        newData.nombre = (char *)malloc(strlen(replaceAll(label, '.', '_')) + 1);
         if(!strcpy(newData.nombre, replaceAll(label, '.', '_')))
             printf("NULL\n");
 

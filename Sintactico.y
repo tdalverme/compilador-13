@@ -12,6 +12,7 @@
     FILE *f_aux;
 
     int yylex();
+    int cantIds = 0, cantTipos = 0;
     extern int _contar_cont;
     char contar[30];
     extern int yylineno;
@@ -138,14 +139,26 @@
         free($4);
         free($6);
         free($8);
+
+        if(cantTipos != cantIds) {
+            fprintf(stderr, "La cantidad de variables declaradas no coincide con la cantidad de tipos indicada.\n");
+            yyerror("Error sintactico");
+            YYABORT;
+        }
     }
 
 
     // DECLARACION CONSTANTES
     dec_const : T_CONST T_ID T_ASIG valor_cte T_PYC {
         fprintf(f_reglas, "\tDeclaracion de constante\n");
+
+        if(existe(&tabla_simbolos, $2)) {
+            fprintf(stderr, "El nombre de la constante ya fue utilizado.\n");
+            yyerror("Error sintactico");
+            YYABORT;
+        }
+
         $$ = crear_nodo("ASIG_CTE", crear_hoja($2), $4);
-        
         char label[50] = "_CONST";
         strcat(label, $2);
 
@@ -172,7 +185,6 @@
     // ASIGNACION
     asignacion : T_ID T_ASIG right_side T_PYC {
         fprintf(f_reglas, "\tAsignacion\n");
-
         if(esConstante($1)) {
             fprintf(stderr, "No se puede asignar a una constante.\n");
             yyerror("Error sintactico");
@@ -412,6 +424,12 @@
         fprintf(f_reglas, "\tLista de IDs\n"); 
         DataTS newData;
 
+        if(declarado(&tabla_simbolos, $3)) {
+            fprintf(stderr, "\'%s\' previamente declarada.\n", $3);
+            yyerror("Error sintactico");
+            YYABORT;
+        }
+
         newData.nombre = (char *)malloc(strlen($3) + 1);
         strcpy(newData.nombre, $3);
         newData.valor = (char *)malloc(1);
@@ -420,13 +438,22 @@
 
         push(&lista_id, &newData);
         free($3);
+
+        cantIds++;
     }
     | T_ID {
+        cantIds = 0;
         fprintf(f_reglas, "\tLista de IDs\n"); 
         if(lista_id.head == NULL) {
             init(&lista_id);
         } else {
             empty(&lista_id);
+        }
+
+        if(declarado(&tabla_simbolos, $1)) {
+            fprintf(stderr, "\'%s\' previamente declarada.\n", $1);
+            yyerror("Error sintactico");
+            YYABORT;
         }
 
         DataTS newData;
@@ -439,14 +466,17 @@
 
         push(&lista_id, &newData);
         free($1);
+
+        cantIds++;
     }
 
     // LISTA DE TIPOS DE DATOS
     lista_tipos : lista_tipos T_COMA tipo {
         fprintf(f_reglas, "\tLista de tipos\n"); 
         $$ = crear_nodo("DEC", $3, $1);
+        cantTipos++;
     } 
-    | tipo
+    | tipo { cantTipos = 0; cantTipos++; }
     tipo : T_INTEGER {
         DataTS actual = pop(&lista_id);
         $$ = crear_nodo("->", crear_hoja(actual.nombre), crear_hoja("Integer"));

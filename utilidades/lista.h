@@ -49,6 +49,7 @@ int existe(Lista *, char *);
 int tiposCompatibles(char *, char *);
 int asignacionCompatible(char *, char *);
 int esConstante(char *);
+int declarado(Lista *, char *);
 
 extern Lista tabla_simbolos;
 

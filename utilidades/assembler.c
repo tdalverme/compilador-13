@@ -311,10 +311,6 @@ void generar_codigo(Node *n, FILE *f) {
         }
     }
 
-    else if(strcmp(n->label, "not") == 0) {
-        //pushStack(stElse, else_cont++);
-    }
-
     else if(strcmp(n->label, "OR") == 0) {
         int e1 = popStack(stElse);
         int e2 = popStack(stElse);

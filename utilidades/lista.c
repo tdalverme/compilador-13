@@ -266,6 +266,23 @@ int existe(Lista *lista, char *nombre) {
     return 0;
 }
 
+int declarado(Lista *lista, char *nombre) {
+    Nodo *actual = lista->head;
+    char *nombreCte = (char *)malloc(7 + sizeof(strlen(nombre)));
+    strcpy(nombreCte, "_CONST");
+    strcat(nombreCte, nombre);
+
+    while (actual->sig != NULL) {
+        if(strcmp(actual->data.nombre, nombre) == 0 || strcmp(actual->data.nombre, nombreCte) == 0) {
+            return 1;
+        } else {
+            actual = actual->sig;
+        }
+    }
+
+    return 0;
+}
+
 int tiposCompatibles(char *n1, char *n2) {
     int t1 = getTipo(&tabla_simbolos, n1);
     int t2 = getTipo(&tabla_simbolos, n2);
