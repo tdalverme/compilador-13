@@ -297,31 +297,30 @@ void generar_codigo(Node *n, FILE *f) {
         }
     }
 
-    else if(strcmp(n->label, "if-else") == 0) {
+    else if(strcmp(n->label, "IF-ELSE") == 0) {
+        popStack(stOpLog);
         fprintf(f, "end_if%d:\n", popStack(stElse));
+    }
 
+    else if(strcmp(n->label, "if") == 0) {
         if(popStack(stOpLog) == 1) {
             fprintf(f, "end_cond%d:\n", popStack(stCond));
         }
+        
+        fprintf(f, "else_part%d:\n", popStack(stElse));
     }
 
-    else if(strcmp(n->label, "IF") == 0) {
-        if(popStack(stOpLog) == 1) {
-            fprintf(f, "end_cond%d:\n", popStack(stCond));
-        }
-    }
-
-    else if(strcmp(n->label, "OR") == 0) {
-        int e1 = popStack(stElse);
-        int e2 = popStack(stElse);
+    else if(strcmp(n->label, "or") == 0) {
+        int e1 = popStack(stCond);
+        int e2 = popStack(stCond);
 
         fprintf(f, "\tJMP then_part%d\n", else_cont);
         fprintf(f, "end_cond%d:\n", e2);
-        fprintf(f, "\tJMP cond%d:\n", e1);
+        fprintf(f, "\tJMP cond%d\n", e1);
         fprintf(f, "end_cond%d:\n", e1);
         fprintf(f, "\tJMP else_part%d\n", else_cont);
-        //pushStack(stElse, else_cont++);
-        fprintf(f, "then_part%d:\n", else_cont++);
+        pushStack(stElse, else_cont++);
+        fprintf(f, "then_part%d:\n", verTope(stElse));
         popStack(stOpLog);
         popStack(stOpLog);
         pushStack(stOpLog, 2);
@@ -335,8 +334,8 @@ void generar_codigo(Node *n, FILE *f) {
         fprintf(f, "end_cond%d:\n", e2);
         fprintf(f, "end_cond%d:\n", e1);
         fprintf(f, "\tJMP else_part%d\n", else_cont);
-        fprintf(f, "then_part%d:\n", else_cont);
-        //pushStack(stElse, else_cont++);
+        pushStack(stElse, else_cont++);
+        fprintf(f, "then_part%d:\n", verTope(stElse));
         popStack(stOpLog);
         popStack(stOpLog);
         pushStack(stOpLog, 2);
@@ -387,16 +386,30 @@ Node *getSubarbolMasIzq(Node *n, FILE *f) {
 
     if(tieneHijos(n->der)) {
         if(strcmp(n->label, "CUERPO") == 0) {
+            if(verTope(stOpLog) == 1) {
+                pushStack(stElse, else_cont++);
+            }
+            
             int endIf = verTope(stElse);
             fprintf(f, "\tJMP end_if%d\n", endIf);
             fprintf(f, "else_part%d:\n", endIf);
+
+            if(verTope(stOpLog) == 1) {
+                fprintf(f, "end_cond%d:\n", popStack(stCond));
+            }
+
             strcpy(n->label, "cuerpo");
         } else if(strcmp(n->label, "NOT") == 0) {
             not = 1;
             strcpy(n->label, "not");
-        } else if(strcmp(n->label, "IF-ELSE") == 0) {
-            pushStack(stElse, else_cont++);
-            strcpy(n->label, "if-else");
+        } else if(strcmp(n->label, "OR") == 0) {
+            fprintf(f, "\tJMP then_part%d\n", else_cont);
+            strcpy(n->label, "or");
+        } else if(strcmp(n->label, "IF") == 0) {
+            if(verTope(stOpLog) == 1) {
+                pushStack(stElse, else_cont++);
+            }
+            strcpy(n->label, "if");            
         }
 
         return getSubarbolMasIzq(n->der, f);

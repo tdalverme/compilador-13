@@ -6,25 +6,21 @@
 	Lista de tipos
 	Lista de tipos
 	Declaracion de variables
+	Declaracion de constante
+	Sentencia PUT
+	Sentencia PUT
+	Sentencia GET
 	Int es factor
 	Factor es termino
 	Termino es expresion
 	Asignacion
-	Int es factor
-	Factor es termino
-	Termino es expresion
-	Asignacion
-	Int es factor
-	Factor es termino
-	Termino es expresion
-	Asignacion
-	ID es factor
+	Float es factor
 	Factor es termino
 	Termino es expresion
 	ID es factor
 	Factor es termino
-	Termino es expresion
-	Condicion
+	Suma
+	Asignacion
 	ID es factor
 	Factor es termino
 	Termino es expresion
@@ -41,7 +37,9 @@
 	Condicion
 	Sentencia PUT
 Bloque
-	Sentencia if
+	Sentencia GET
+Bloque
+	Sentencia if-else
 	ID es factor
 	Factor es termino
 	Termino es expresion
@@ -49,8 +47,53 @@ Bloque
 	Factor es termino
 	Suma
 	Asignacion
+	ID es factor
+	Factor es termino
+	Float es factor
+	Division
+	Termino es expresion
+	Expresion entre parentesis
+	Factor es termino
+	Termino es expresion
+	ID es factor
+	Factor es termino
+	ID es factor
+	Factor es termino
+	ID es factor
+	Multiplicacion
+	Termino es expresion
+	Int es factor
+	Factor es termino
+	Termino es expresion
+	Lista de expresiones
+	ID es factor
+	Factor es termino
+	ID es factor
+	Multiplicacion
+	Termino es expresion
+	Lista de expresiones
+	Int es factor
+	Factor es termino
+	Termino es expresion
+	Lista de expresiones
+	Int es factor
+	Factor es termino
+	Termino es expresion
+	Lista de expresiones
+	Funcion contar
+	Multiplicacion
+	Termino es expresion
+	Expresion entre parentesis
+	Factor es termino
+	Suma
+	Asignacion
+	ID es factor
+	Factor es termino
+	Termino es expresion
+	ID es factor
+	Factor es termino
+	Suma
+	Asignacion
 Bloque
 	While loop
-Bloque
-	Sentencia if
 Fin programa
